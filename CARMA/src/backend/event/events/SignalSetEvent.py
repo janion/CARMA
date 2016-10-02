@@ -11,16 +11,22 @@ class SignalSetEvent():
     
     CODE = "S"
 
-    def __init__(self, signalName):
+    def __init__(self, signalName, state):
         '''
         Constructor
         '''
         self.entityName = signalName
+        self.value = state
 
 ################################################################################
     
     def getEntityName(self):
         return self.entityName
+
+################################################################################
+    
+    def getValue(self):
+        return self.value
 
 ################################################################################
     

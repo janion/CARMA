@@ -28,19 +28,22 @@ class EntityManager():
 ################################################################################
 
     def createTrain(self, name, axelCount):
-        self.trains.append(Train(name, axelCount))
+        if self.isUniqueEntityName(name):
+            self.trains.append(Train(name, axelCount))
 
 ################################################################################
 
     def createSection(self, name, previousSectionName = None, nextSectionName = None):
-        previousSection = self.getSectionFromName(previousSectionName)
-        nextSection = self.getSectionFromName(nextSectionName)
-        self.sections.append(TrackSection(name, previousSection, nextSection))
+        if self.isUniqueEntityName(name):
+            previousSection = self.getSectionFromName(previousSectionName)
+            nextSection = self.getSectionFromName(nextSectionName)
+            self.sections.append(TrackSection(name, previousSection, nextSection))
 
 ################################################################################
 
     def createSignal(self, name):
-        self.signals.append(Signal(name))
+        if self.isUniqueEntityName(name):
+            self.signals.append(Signal(name))
 
 ################################################################################
 
@@ -136,4 +139,19 @@ class EntityManager():
 
     def getSignals(self):
         return self.signals
+
+################################################################################
+
+    def getAllEntityNames(self):
+        names = []
+        for section in self.sections:
+            names.append(section.getName())
+        
+        for train in self.trains:
+            names.append(train.getName())
+        
+        for signal in self.signals:
+            names.append(signal.getName())
+        
+        return names
         

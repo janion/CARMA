@@ -37,12 +37,18 @@ class TestEventWindow(wx.Frame):
               "SignalSetEvent" : SignalSetEvent,
               "StopPointEvent" : StopPointEvent
               }
+    VALUED_EVENTS = {PowerEvent : int,
+                     SignalSetEvent : str
+                     }
     
     def __init__(self, title):
         wx.Frame.__init__(self, None, title=title, pos=(150,150), size=(800,550))
         self.panel = wx.Panel(self)
 
         self.createMenu()
+        
+        EventScheduler.subscribeForEvents(self.hardwareEvent, False)
+        EventScheduler.subscribeForEvents(self.softwareEvent, True)
         self.manager = EntityManager()
 
         mainSizer = wx.BoxSizer(wx.VERTICAL)
@@ -51,9 +57,6 @@ class TestEventWindow(wx.Frame):
         self.populateNotebooks()
         
         self.panel.SetSizer(mainSizer)
-        
-        EventScheduler.subscribeForEvents(self.hardwareEvent, False)
-        EventScheduler.subscribeForEvents(self.softwareEvent, True)
         
 ################################################################################
 
@@ -66,8 +69,9 @@ class TestEventWindow(wx.Frame):
     def hardwareEvent(self, event):
         eventName = str(event.__class__).split(".")[-1]
         entityName = event.getEntityName()
-#         value = self.manager.getEventValue(event) # TODO Implement this or change to if event.istoHardware: get value
-        value = "value"
+        value = "N/A"
+        if event.isToHardware():
+            value = str(event.getValue())
         
         index = self.eventLog.GetItemCount()
         self.eventLog.InsertStringItem(index, eventName)
@@ -87,24 +91,45 @@ class TestEventWindow(wx.Frame):
 
     def createEventButtons(self):
         btnSizer = wx.BoxSizer(wx.VERTICAL)
-        
-        btnSizer.Add(wx.StaticText(self.panel, label="Entity:"), 0, wx.ALL|wx.EXPAND, 0)
-        self.entityBox = wx.Choice(self.panel, choices=[])
-        btnSizer.Add(self.entityBox, 0, wx.ALL|wx.EXPAND, 5)
-        
+        btnSizer.Add(self.createParametersSizer(), 0, wx.ALL|wx.EXPAND, 0)
         for title in self.EVENTS.keys():
             btn = wx.Button(self.panel, label=title)
-            btn.Bind(wx.EVT_BUTTON, self.eventButton)
+            btn.Bind(wx.EVT_BUTTON, self.scheduleEvent)
             btnSizer.Add(btn, 0, wx.ALL|wx.EXPAND, 5)
         
         return btnSizer
         
 ################################################################################
 
-    def eventButton(self, event):
+    def createParametersSizer(self):
+        labelSizer = wx.BoxSizer(wx.HORIZONTAL)
+        labelSizer.Add(wx.StaticText(self.panel, label="Entity:"), 1, wx.ALL|wx.EXPAND, 0)
+        labelSizer.Add(wx.StaticText(self.panel, label="Value:"), 1, wx.ALL|wx.EXPAND, 0)
+        
+        inputSizer = wx.BoxSizer(wx.HORIZONTAL)
+        self.entityBox = wx.Choice(self.panel, choices = self.manager.getAllEntityNames())
+        inputSizer.Add(self.entityBox, 1, wx.ALL|wx.EXPAND, 5)
+        self.valueBox = wx.TextCtrl(self.panel)
+        inputSizer.Add(self.valueBox, 1, wx.ALL|wx.EXPAND, 5)
+        
+        paramSizer = wx.BoxSizer(wx.VERTICAL)
+        paramSizer.Add(labelSizer, 0, wx.ALL|wx.EXPAND, 0)
+        paramSizer.Add(inputSizer, 0, wx.ALL|wx.EXPAND, 0)
+        
+        return paramSizer
+        
+################################################################################
+
+    def scheduleEvent(self, event):
         btn = event.GetEventObject()
         entityName = self.entityBox.GetStringSelection()
-        EventScheduler.scheduleEvent(self.EVENTS[btn.GetLabel()](entityName))
+        eventClass = self.EVENTS[btn.GetLabel()]
+        
+        if not eventClass.isToHardware():
+            EventScheduler.scheduleEvent(eventClass(entityName))
+        else:
+            value = self.VALUED_EVENTS[eventClass](self.valueBox.GetValue())
+            EventScheduler.scheduleEvent(eventClass(entityName, value))
         
 ################################################################################
 

@@ -11,16 +11,22 @@ class PowerEvent():
     
     CODE = "P"
 
-    def __init__(self, sectionName):
+    def __init__(self, sectionName, power):
         '''
         Constructor
         '''
         self.entityName = sectionName
+        self.value = power
 
 ################################################################################
     
     def getEntityName(self):
         return self.entityName
+
+################################################################################
+    
+    def getValue(self):
+        return self.value
 
 ################################################################################
     

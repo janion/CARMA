@@ -1,0 +1,10 @@
+Test window:
+	- Create an entity and update the notebooks with a new page and the entity box with a new entry
+		- Force the entity box to have an entity in it if any exist
+	- Edit entity to hook up section etc.
+
+Backend:
+	- Save/Load in a reasonable format
+	- Initialise network ie. set signals appropriately, set axle count of sections, etc.
+	- Catch signal set event in train in order to move off from a red signal changing
+	- Subscribe for specific events
