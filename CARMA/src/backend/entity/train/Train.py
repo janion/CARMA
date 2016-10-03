@@ -15,14 +15,14 @@ class Train():
     SLOW = 25
     STOP = 0
 
-    def __init__(self, name, axelCount):
+    def __init__(self, name):
         '''
         Constructor.
         '''
         self.name = name
-        self.axleCount = axelCount
         self.power = self.STOP
         self.occupiedSections = []
+        self.axleCount = 0
 
 ################################################################################
 
@@ -69,7 +69,10 @@ class Train():
         '''
         Get name of section on which the front of the train lies.
         '''
-        return self.occupiedSections[0].getName()
+        if len(self.occupiedSections) > 0:
+            return self.occupiedSections[0].getName()
+        else:
+            return str(None)
 
 ################################################################################
 

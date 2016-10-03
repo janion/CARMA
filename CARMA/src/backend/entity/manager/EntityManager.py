@@ -27,17 +27,15 @@ class EntityManager():
 
 ################################################################################
 
-    def createTrain(self, name, axelCount):
+    def createTrain(self, name):
         if self.isUniqueEntityName(name):
-            self.trains.append(Train(name, axelCount))
+            self.trains.append(Train(name))
 
 ################################################################################
 
-    def createSection(self, name, previousSectionName = None, nextSectionName = None):
+    def createSection(self, name):
         if self.isUniqueEntityName(name):
-            previousSection = self.getSectionFromName(previousSectionName)
-            nextSection = self.getSectionFromName(nextSectionName)
-            self.sections.append(TrackSection(name, previousSection, nextSection))
+            self.sections.append(TrackSection(name))
 
 ################################################################################
 

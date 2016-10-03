@@ -14,16 +14,16 @@ class TrackSection():
     Each section has associated detection mechanisms, a power mechanism and a signal.
     '''
 
-    def __init__(self, name, previousSection = None, nextSection = None):
+    def __init__(self, name):
         '''
         Constructor.
         '''
         self.name = name
-        self.previousSection = previousSection
-        self.nextSection = nextSection
-        self.signal = Signal()
         self.power = Train.STOP
         self.train = None
+        self.previousSection = None
+        self.nextSection = None
+        self.signal = None
         self.trainPassedCheckPoint = False
         self.trainPassedStopPoint = False
         self.axleCount = 0
@@ -125,17 +125,26 @@ class TrackSection():
 ################################################################################
 
     def getPreviousSectionName(self):
-        return self.previousSection.getName()
+        if self.previousSection != None:
+            return self.previousSection.getName()
+        else:
+            return str(None)
 
 ################################################################################
 
     def getNextSectionName(self):
-        return self.nextSection.getName()
+        if self.nextSection != None:
+            return self.nextSection.getName()
+        else:
+            return str(None)
 
 ################################################################################
 
     def getSignalName(self):
-        return self.signal.getName()
+        if self.signal != None:
+            return self.signal.getName()
+        else:
+            return str(None)
 
 ################################################################################
 
@@ -145,16 +154,19 @@ class TrackSection():
 ################################################################################
 
     def getTrainName(self):
-        return self.train.getName()
+        if self.train != None:
+            return self.train.getName()
+        else:
+            return str(None)
 
 ################################################################################
 
-    def GetCheckPointPassed(self):
+    def getCheckPointPassed(self):
         return self.trainPassedCheckPoint
 
 ################################################################################
 
-    def GetStopPointPassed(self):
+    def getStopPointPassed(self):
         return self.trainPassedStopPoint
 
 ################################################################################

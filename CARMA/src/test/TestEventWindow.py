@@ -150,18 +150,21 @@ class TestEventWindow(wx.Frame):
 
     def createNotebooksPanel(self):
         trains = self.manager.getTrains()
-        self.trainBookSizer = self.createNotebook(self.TRAIN, trains)
+        trainBookSizer = self.createNotebook(self.TRAIN, trains)
+        self.trainBook = trainBookSizer.GetChildren()[1].GetWindow()
         
         sections = self.manager.getSections()
-        self.sectionBookSizer = self.createNotebook(self.SECTION, sections)
+        sectionBookSizer = self.createNotebook(self.SECTION, sections)
+        self.sectionBook = sectionBookSizer.GetChildren()[1].GetWindow()
         
         signals = self.manager.getSignals()
-        self.signalBookSizer = self.createNotebook(self.SIGNAL, signals)
+        signalBookSizer = self.createNotebook(self.SIGNAL, signals)
+        self.signalBook = signalBookSizer.GetChildren()[1].GetWindow()
         
         sizer = wx.BoxSizer(wx.HORIZONTAL)
-        sizer.Add(self.trainBookSizer, 1, wx.ALL|wx.EXPAND, 5)
-        sizer.Add(self.sectionBookSizer, 1, wx.ALL|wx.EXPAND, 5)
-        sizer.Add(self.signalBookSizer, 1, wx.ALL|wx.EXPAND, 5)
+        sizer.Add(trainBookSizer, 1, wx.ALL|wx.EXPAND, 5)
+        sizer.Add(sectionBookSizer, 1, wx.ALL|wx.EXPAND, 5)
+        sizer.Add(signalBookSizer, 1, wx.ALL|wx.EXPAND, 5)
         
         return sizer
         
@@ -174,31 +177,31 @@ class TestEventWindow(wx.Frame):
         
         nb = wx.Notebook(self.panel, size=(21,21), style=wx.BK_DEFAULT)
         for entity in entities:
-            scrollPane = scrolled.ScrolledPanel(nb)
-            lc = wx.ListCtrl(scrollPane, style=wx.LC_REPORT)
-            lc.InsertColumn(0, self.ENTITY_TABLE_TITLES[0])
-            lc.InsertColumn(1, self.ENTITY_TABLE_TITLES[1])
-            
-            scrollSizer = wx.BoxSizer(wx.HORIZONTAL)
-            scrollSizer.Add(lc, 1, wx.ALL|wx.EXPAND, 0)
-            scrollPane.SetSizer(scrollSizer)
-            
-            nb.AddPage(scrollPane, entity.getName())
+            self.addListPageToNotebook(nb, entity.getName())
 
         notebookSizer.Add(nb, 1, wx.ALL|wx.EXPAND, 0)
         return notebookSizer
         
 ################################################################################
 
-    def populateNotebooks(self):
-        # FIXME This is too messy and coupled to the structure
-        trainBook = self.trainBookSizer.GetChildren()[1].GetWindow()
-        sectionBook = self.sectionBookSizer.GetChildren()[1].GetWindow()
-        signalBook = self.signalBookSizer.GetChildren()[1].GetWindow()
+    def addListPageToNotebook(self, title, nb):
+        scrollPane = scrolled.ScrolledPanel(nb)
+        lc = wx.ListCtrl(scrollPane, style=wx.LC_REPORT)
+        lc.InsertColumn(0, self.ENTITY_TABLE_TITLES[0])
+        lc.InsertColumn(1, self.ENTITY_TABLE_TITLES[1])
         
-        self.populateLists(trainBook)
-        self.populateLists(sectionBook)
-        self.populateLists(signalBook)
+        scrollSizer = wx.BoxSizer(wx.HORIZONTAL)
+        scrollSizer.Add(lc, 1, wx.ALL|wx.EXPAND, 0)
+        scrollPane.SetSizer(scrollSizer)
+        
+        nb.AddPage(scrollPane, title)
+        
+################################################################################
+
+    def populateNotebooks(self):
+        self.populateLists(self.trainBook)
+        self.populateLists(self.sectionBook)
+        self.populateLists(self.signalBook)
         
 ################################################################################
 
@@ -206,15 +209,16 @@ class TestEventWindow(wx.Frame):
         pageCount = notebook.GetPageCount()
         for i in xrange(pageCount):
             scrollPane = notebook.GetPage(i)
-            listCtrl = scrollPane.GetSizer().GetChildren()[0].GetChild()
+            listCtrl = scrollPane.GetSizer().GetChildren()[0].GetWindow()
             listCtrl.DeleteAllItems()
             
-            entity = self.manager.getEntity(notebook.GetPageText())
+            entity = self.manager.getEntity(notebook.GetPageText(i))
             attributes = self.getEntityAttributes(entity)
             
-            for attribute in attributes:
-                listCtrl.InsertStringItem(0, attribute[0])
-                listCtrl.SetStringItem(0, 1, attribute[1])
+            for x in xrange(len(attributes)):
+                attribute = attributes[x]
+                listCtrl.InsertStringItem(x, attribute[0])
+                listCtrl.SetStringItem(x, 1, attribute[1])
         
 ################################################################################
 
@@ -225,16 +229,16 @@ class TestEventWindow(wx.Frame):
             attributes.append(["Power", str(entity.getPower())])
             attributes.append(["Nose section", entity.getNoseSectionName()])
         elif isinstance(entity, TrackSection):
-            attributes.append(["Previous section", entity.GetPreviousSectionName()])
-            attributes.append(["Next section", entity.GetNextSectionName()])
-            attributes.append(["Signal", entity.GetSignalName()])
-            attributes.append(["Power", str(entity.GetPower())])
-            attributes.append(["Train", entity.GetTrainName()])
-            attributes.append(["Check point passed", entity.GetCheckPointPassed()])
-            attributes.append(["Stop point passed", entity.GetStopPointPassed()])
+            attributes.append(["Previous section", entity.getPreviousSectionName()])
+            attributes.append(["Next section", entity.getNextSectionName()])
+            attributes.append(["Signal", entity.getSignalName()])
+            attributes.append(["Power", str(entity.getPower())])
+            attributes.append(["Train", entity.getTrainName()])
+            attributes.append(["Check point passed", str(entity.getCheckPointPassed())])
+            attributes.append(["Stop point passed", str(entity.getStopPointPassed())])
             attributes.append(["Axle count", str(entity.getAxleCount())])
         elif isinstance(entity, Signal):
-            attributes.append(["State", entity.GetState()])
+            attributes.append(["State", entity.getState()])
         
         return attributes
         
@@ -244,14 +248,88 @@ class TestEventWindow(wx.Frame):
         # Prepare the menu bar
         menuBar = wx.MenuBar()
 
-        # 1st menu from left
+        # File menu
         menu1 = wx.Menu()
-        menu1.Append(101, "Create train")
-        menu1.Append(102, "Create section")
-        menu1.Append(103, "Create signal")
+        menu1.Append(101, "Save")
+        menu1.Append(102, "Load")
         menu1.AppendSeparator()
         menu1.Append(104, "Close")
         # Add menu to the menu bar
         menuBar.Append(menu1, "File")
 
+        # Entity menu
+        menu2 = wx.Menu()
+        # Create menu
+        menu21 = wx.Menu()
+        menu21.Append(2011, self.TRAIN)
+        menu21.Append(2012, self.SECTION)
+        menu21.Append(2013, self.SIGNAL)
+        # Edit menu
+        menu22 = wx.Menu()
+        menu22.Append(2021, self.TRAIN)
+        menu22.Append(2022, self.SECTION)
+        menu22.Append(2023, self.SIGNAL)
+        # Add submenus to the entity menu
+        menu2.AppendMenu(201, "Create", menu21)
+        menu2.AppendMenu(201, "Edit", menu22)
+        # Add menu to the menu bar
+        menuBar.Append(menu2, "Entity")
+
         self.SetMenuBar(menuBar)
+        
+        self.Bind(wx.EVT_MENU, self.close, id=104)
+        
+        self.Bind(wx.EVT_MENU, self.createTrain, id=2011)
+        self.Bind(wx.EVT_MENU, self.createSection, id=2012)
+        self.Bind(wx.EVT_MENU, self.createSignal, id=2013)
+        
+################################################################################
+
+    def createTrain(self, event):
+        name = self.createEntity("train")
+        if name != None:
+            self.manager.createTrain(name)
+            self.addListPageToNotebook(name, self.trainBook)
+            self.populateNotebooks()
+        
+################################################################################
+
+    def createSection(self, event):
+        name = self.createEntity("section")
+        if name != None:
+            self.manager.createSection(name)
+            self.addListPageToNotebook(name, self.sectionBook)
+            self.populateNotebooks()
+        
+################################################################################
+
+    def createSignal(self, event):
+        name = self.createEntity("signal")
+        if name != None:
+            self.manager.createSignal(name)
+            self.addListPageToNotebook(name, self.signalBook)
+            self.populateNotebooks()
+        
+################################################################################
+
+    def createEntity(self, entityTypeName):
+        dlg = wx.TextEntryDialog(self, 'Enter %s name' %entityTypeName, 'Create %s' %entityTypeName, '')
+
+        isValid = False
+        if dlg.ShowModal() == wx.ID_OK:
+            name = dlg.GetValue()
+            if self.manager.isUniqueEntityName(name):
+                isValid = True
+                self.entityBox.SetItems(self.entityBox.GetItems() + [name])
+
+        dlg.Destroy()
+        
+        if isValid:
+            return name
+        else:
+            return None
+        
+################################################################################
+
+    def close(self, event):
+        self.Destroy()

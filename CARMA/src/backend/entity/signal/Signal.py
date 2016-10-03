@@ -11,9 +11,9 @@ class Signal():
     Signal protecting a track section.
     '''
     
-    RED = "R"
-    GREEN = "G"
-    YELLOW = "Y"
+    RED = "RED"
+    GREEN = "GREEN"
+    YELLOW = "YELLOW"
 
     def __init__(self, name):
         '''
